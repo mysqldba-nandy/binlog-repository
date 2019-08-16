@@ -17,7 +17,7 @@ class Consumer:
         self.timestamp = 0
 
     @staticmethod
-    def _base64(value):
+    def _base64_encode(value):
         return base64.b64encode(value.encode()).decode()
 
     def run(self):
@@ -27,9 +27,9 @@ class Consumer:
                 self.timestamp = binlog_rows[0]['time']
                 for i, binlog in enumerate(binlog_rows):
                     binlog['time'] = binlog['time'] * config.NANO + i
-                    binlog['key'] = self._base64(binlog['key'])
-                    binlog['data'] = self._base64(binlog['data'])
-                    binlog['old'] = 'old' in binlog and self._base64(binlog['old']) or ''
+                    binlog['key'] = self._base64_encode(binlog['key'])
+                    binlog['data'] = self._base64_encode(binlog['data'])
+                    binlog['old'] = 'old' in binlog and self._base64_encode(binlog['old']) or ''
                     binlog_rows[i] = {
                         "measurement": config.INFLUX_TABLE_POINT,
                         "time": binlog['time'],

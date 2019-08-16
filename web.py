@@ -58,11 +58,11 @@ def tables():
 @app.route("/binlogs", methods=['POST'])
 def binlogs():
     timezone = pytz.FixedOffset(int(request.form.get('timezone')) * 60)
-    rows, func, use_pk, no_pk = fetch_all()
+    rows, func, use_pk, no_pk = _fetch_all()
     sqls = []
     if len(rows):
-        rows['data'] = rows['data'].apply(lambda s: base64.b64decode(s).decode())
-        rows['key'] = rows['key'].apply(lambda s: base64.b64decode(s).decode())
+        rows['data'] = rows['data'].apply(_base64_decode)
+        rows['key'] = rows['key'].apply(_base64_decode)
         for time_index, row in rows.iterrows():
             time_index = timezone.normalize(time_index)
             row = row.to_dict()
@@ -79,7 +79,11 @@ def binlogs():
     return jsonify(sqls)
 
 
-def fetch_all():
+def _base64_decode(value):
+    return base64.b64decode(value).decode()
+
+
+def _fetch_all():
     file = request.form.get('file')
     database = request.form.get('database')
     start_time = request.form.get('start_time')
@@ -166,7 +170,7 @@ def undo_sql(row, use_pk=False, no_pk=False):
                 ', '.join(kv_pair(v=v) for v in row['data'].values())
             )
     elif row['type'] == 'UPDATE':
-        row['old'] = json.loads(base64.b64decode(row['old']).decode())
+        row['old'] = json.loads(_base64_decode(row['old']))
         if use_pk and row['key']:
             sql = 'UPDATE `{0}`.`{1}` SET {2} WHERE {3};'.format(
                 row['database'], row['table'],
@@ -213,7 +217,7 @@ def redo_sql(row, use_pk=False, no_pk=False):
                 ', '.join(kv_pair(v=v) for v in row['data'].values())
             )
     elif row['type'] == 'UPDATE':
-        row['old'] = json.loads(base64.b64decode(row['old']).decode())
+        row['old'] = json.loads(_base64_decode(row['old']))
         if use_pk and row['key']:
             sql = 'UPDATE `{0}`.`{1}` SET {2} WHERE {3};'.format(
                 row['database'], row['table'],
