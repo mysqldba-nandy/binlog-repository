@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>binlog2sql</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="spectre.min.css">
+    <link rel="stylesheet" href="index.css">
+    <script src="jquery-3.2.1.min.js"></script>
+    <script src="extend.js"></script>
+    <script src="index.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="columns">
+        <div class="col-3">
+            <form>
+                <div class="input-group">
+                    <select class="form-select" id="file"></select>
+                    <span class="input-group-addon">binlog</span>
+                </div>
+                <div class="input-group">
+                    <select class="form-select" id="database"></select>
+                    <span class="input-group-addon">database</span>
+                </div>
+                <div class="input-group">
+                    <select class="form-select" id="table"></select>
+                    <span class="input-group-addon">table</span>
+                </div>
+                <div class="input-group">
+                    <input type="text" class="form-input" id="start-time" placeholder="start yyyy-MM-dd HH:mm:ss">
+                    <span class="input-group-addon">datetime</span>
+                </div>
+                <div class="input-group">
+                    <input type="text" class="form-input" id="stop-time" placeholder="stop 1564477200[000]">
+                    <span class="input-group-addon">datetime</span>
+                </div>
+                <div class="input-group">
+                    <input type="number" class="form-input" id="timezone" placeholder="+8:00" min="-11" max="11">
+                    <span class="input-group-addon">timezone</span>
+                </div>
+                <div class="input-group">
+                    <input type="number" class="form-input" id="start-position" placeholder="start position">
+                    <span class="input-group-addon">binlog</span>
+                </div>
+                <div class="input-group">
+                    <input type="number" class="form-input" id="stop-position" placeholder="stop position">
+                    <span class="input-group-addon">binlog</span>
+                </div>
+                <div class="card">
+                    <div class="card-image popover popover-right">
+                        <img src="mysql.png" class="img-responsive">
+                        <div class="popover-container">
+                            <div class="card">
+                                <div class="card-body">
+                                    <ol>
+                                        <li>USE-PK：进行UPDATE、DELETE操作时，WHERE只使用主键。</li>
+                                        <li>NO-PK：进行INSERT操作时，去除主键。</li>
+                                        <li>UNDO：生成undo sql，用于数据恢复。</li>
+                                        <li>REDO：生成redo sql，用于数据重做。</li>
+                                        <li>DDL：查找当前数据库中表结构修改sql。</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="input-group" id="sql-type">
+                            <label class="form-checkbox form-inline">
+                                <input type="checkbox" value="INSERT" checked=""><i class="form-icon"></i> INSERT
+                            </label>
+                            <label class="form-checkbox form-inline">
+                                <input type="checkbox" value="UPDATE" checked=""><i class="form-icon"></i> UPDATE
+                            </label>
+                            <label class="form-checkbox form-inline">
+                                <input type="checkbox" value="DELETE" checked=""><i class="form-icon"></i> DELETE
+                            </label>
+                        </div>
+                        <div class="input-group" id="pk-type">
+                            <label class="form-checkbox form-inline">
+                                <input type="checkbox" value="USE-PK" checked=""><i class="form-icon"></i> USE-PK
+                            </label>
+                            <label class="form-checkbox form-inline">
+                                <input type="checkbox" value="NO-PK"><i class="form-icon"></i> NO-PK
+                            </label>
+                        </div>
+                        <div class="input-group" id="output-type">
+                            <label class="form-radio form-inline">
+                                <input type="radio" name="parse-type" value="UNDO" checked=""><i class="form-icon"></i> UNDO
+                            </label>
+                            <label class="form-radio form-inline">
+                                <input type="radio" name="parse-type" value="REDO"><i class="form-icon"></i> REDO
+                            </label>
+                            <label class="form-radio form-inline">
+                                <input type="radio" name="parse-type" value="DDL"><i class="form-icon"></i> DDL
+                            </label>
+                        </div>
+                    </div>
+                    <div class="card-footer input-group">
+                        <button type="button" class="btn btn-primary" id="start">START</button>
+                        <button type="button" class="btn btn-success" id="download">DOWNLOAD</button>
+                    </div>
+                </div>
+            </form>
+            <textarea class="form-input" readonly id="log" placeholder="log:"></textarea>
+        </div>
+        <div class="col-9">
+            <textarea class="form-input" readonly id="sql" placeholder="sql:"></textarea>
+        </div>
+    </div>
+</div>
+</body>
+</html>

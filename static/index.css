@@ -1,0 +1,28 @@
+* {
+    font-family: Consolas, "Microsoft YaHei UI"
+}
+
+div.columns > div {
+    padding: 5px;
+}
+
+span.input-group-addon {
+    width: 90px;
+}
+
+form > div.input-group {
+    margin-bottom: 3px;
+}
+
+form button {
+    width: 100%;
+    font-weight: bold;
+    margin: 0 2px;
+}
+
+textarea {
+    resize: none;
+    background: transparent;
+    white-space: pre;
+    font-size: 0.9em !important;
+}
