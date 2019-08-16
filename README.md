@@ -4,9 +4,9 @@ the binlog-repository of mysql CDC(Change Data Capture)
 
 ## 界面
 - static/example-dml.png
-<img src="static/example-dml.png"/>
-- static/example-dll.png
-<img src="static/example-dll.png"/>
+<img src="static/example-dml.png"/>d
+- static/example-ddl.png
+<img src="static/example-ddl.png"/>
 
 ## 使用
 ### 1. 前提  
