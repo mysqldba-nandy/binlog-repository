@@ -3,8 +3,10 @@ the binlog-repository of mysql CDC(Change Data Capture)
 利用[pymysqlreplication](https://github.com/noplay/python-mysql-replication)进行`binlog`实时解析，保存至`InfluxDB`时序数据库，并提供`web`界面生成标准`undo sql, redo sql, ddl sql`  
 
 ## 界面
-
-<img src="static/example.png"/>
+- static/example-dml.png
+<img src="static/example-dml.png"/>
+- static/example-dll.png
+<img src="static/example-dll.png"/>
 
 ## 使用
 ### 1. 前提  

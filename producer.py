@@ -123,7 +123,7 @@ class Producer:
                 binlog = {
                     'time': binlog_event.timestamp,
                     'file': log_file,
-                    'database': binlog_event.schema and binlog_event.schema.decode() or '',
+                    'database': binlog_event.schema,
                     'table': '',
                     'type': 'DDL',
                     'key': self._handle_pk(''),
