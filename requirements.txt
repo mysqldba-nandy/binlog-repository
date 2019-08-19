@@ -3,3 +3,4 @@ PyMySQL==0.9.2
 Flask_Compress==1.4.0
 pytz==2019.2
 influxdb==5.2.2
+pandas==0.24.1

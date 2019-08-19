@@ -74,7 +74,8 @@ def binlogs():
                 'datetime': time_index._short_repr[:19],
                 'xid': row['xid']
             }
-            sql = sql + f" # {json.dumps(annotation)}"
+            if config.OUTPUT_ROWS_EXTRA:
+                sql = sql + f" # {json.dumps(annotation)}"
             sqls.append(sql)
     return jsonify(sqls)
 

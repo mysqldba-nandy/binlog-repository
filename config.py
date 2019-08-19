@@ -43,6 +43,7 @@ NANO = 10 ** 9  # const
 # web
 PORT = web_config['port']
 OUTPUT_ROWS_LIMIT = int(web_config['output-size'])
+OUTPUT_ROWS_EXTRA = int(web_config['output-extra'])
 
 # other
 LOG_LEVEL = other_config['log-level']
