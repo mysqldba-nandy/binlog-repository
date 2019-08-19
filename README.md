@@ -48,7 +48,18 @@ log-level = INFO # DEBUG, INFO, WARNING
 ```
 ### 3. 运行
 ```shell
+# 请先修改本地project.ini中的参数
 python run.py
+```
+```
+# $PWD/project.ini，请先在本地创建project.ini并修改参数，然后挂载
+# 如果想省去docker打包的环节，可使用已有镜像nandy/binlog-repository:2019-08-19
+docker build -t binlog-repository:2019-08-19 .
+docker run --name binlog-repository --restart always -d -p3000:3000 \
+    -v $PWD/project.ini:/app:proejct.ini binlog-repository:2019-08-19
+```
+```
+
 ```
 
 ## 解析
@@ -186,8 +197,7 @@ pos         integer
 
 ### 3. BUG反馈
 - 已知bug（无奈...）  
-json，geometry字段类型导致where条件失效；delimiter缺失导致部分ddl执行失败  
-以上，需留意和手动修改
+json，geometry字段类型导致where条件失效；delimiter缺失导致部分ddl执行失败。以上，需留意和手动修改
 
 - 反馈bug  
 无论是定制版`pymysqlreplication`还是`binlog-repository`项目，欢迎issues。
