@@ -56,7 +56,7 @@ python run.py
 # 如果想省去docker打包的环节，可使用已有镜像nandy/binlog-repository:2019-08-19
 docker build -t binlog-repository:2019-08-19 .
 docker run --name binlog-repository --restart always -d -p3000:3000 \
-    -v $PWD/project.ini:/app:proejct.ini binlog-repository:2019-08-19
+    -v $PWD/project.ini:/app/proejct.ini binlog-repository:2019-08-19
 ```
 ```
 
@@ -128,7 +128,7 @@ docker run --name binlog-repository --restart always -d -p3000:3000 \
 ```
 - 存储
 ```
-# 因为Influx DB不支持json，所以字段key、data、old先转换成base64之后存储
+# 因为InfluxDB不支持json，所以字段key、data、old先转换成base64之后存储
 data = data.encode()
 data = base64.b64encode(data).decode()
 # 读取的时候再转换回来
@@ -197,7 +197,7 @@ pos         integer
 
 ### 3. BUG反馈
 - 已知bug（无奈...）  
-json，geometry字段类型导致where条件失效；delimiter缺失导致部分ddl执行失败。以上，需留意和手动修改
+json，geometry字段类型导致where条件失效；delimiter缺失导致部分ddl执行失败。以上，需留意并手动修改
 
 - 反馈bug  
 无论是定制版`pymysqlreplication`还是`binlog-repository`项目，欢迎issues。
