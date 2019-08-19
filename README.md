@@ -47,19 +47,18 @@ output-size = 10000 # output sql limit
 log-level = INFO # DEBUG, INFO, WARNING
 ```
 ### 3. 运行
-```shell
+```bash
 # 请先修改本地project.ini中的参数
 python run.py
 ```
-```
+```bash
+# 打包镜像
+docker build -t binlog-repository:2019-08-19 .
+
 # $PWD/project.ini，请先在本地创建project.ini并修改参数，然后挂载
 # 如果想省去docker打包的环节，可使用已有镜像nandy/binlog-repository:2019-08-19
-docker build -t binlog-repository:2019-08-19 .
 docker run --name binlog-repository --restart always -d -p3000:3000 \
-    -v $PWD/project.ini:/app/proejct.ini binlog-repository:2019-08-19
-```
-```
-
+    -v $PWD/project.ini:/app/project.ini binlog-repository:2019-08-19
 ```
 
 ## 解析
