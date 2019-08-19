@@ -58,7 +58,7 @@ def tables():
 @app.route("/binlogs", methods=['POST'])
 def binlogs():
     timezone = pytz.FixedOffset(int(request.form.get('timezone')) * 60)
-    rows, func, use_pk, no_pk = _fetch_all()
+    rows, func, use_pk, no_pk = fetch_all()
     sqls = []
     if len(rows):
         rows['data'] = rows['data'].apply(_base64_decode)
@@ -79,11 +79,7 @@ def binlogs():
     return jsonify(sqls)
 
 
-def _base64_decode(value):
-    return base64.b64decode(value).decode()
-
-
-def _fetch_all():
+def fetch_all():
     file = request.form.get('file')
     database = request.form.get('database')
     start_time = request.form.get('start_time')
@@ -142,18 +138,17 @@ def _fetch_all():
 
 
 def undo_sql(row, use_pk=False, no_pk=False):
-    if row['data'].startswith('{'):
-        row['data'] = json.loads(row['data'])
+    row['data'] = json.loads(row['data'])
     if row['type'] == 'INSERT':
         if use_pk and row['key']:
             sql = 'DELETE FROM `{0}`.`{1}` WHERE {2};'.format(
                 row['database'], row['table'],
-                ' AND '.join(f'{kv_pair(v=row["data"][k], k=k)}' for k in row['key'])
+                ' AND '.join(_convert_key_value(k=k, v=row["data"][k], is_null=True) for k in row['key'])
             )
         else:
             sql = 'DELETE FROM `{0}`.`{1}` WHERE {2};'.format(
                 row['database'], row['table'],
-                ' AND '.join(f'{kv_pair(v=row["data"][k], k=k)}' for k in row['data'])
+                ' AND '.join(_convert_key_value(k=k, v=row["data"][k], is_null=True) for k in row['data'])
             )
     elif row['type'] == 'DELETE':
         if no_pk and row['key']:
@@ -161,46 +156,45 @@ def undo_sql(row, use_pk=False, no_pk=False):
             sql = 'INSERT INTO `{0}`.`{1}`({2}) VALUES ({3});'.format(
                 row['database'], row['table'],
                 ', '.join(f'`{k}`' for k in row['data'].keys()),
-                ', '.join(kv_pair(v=v) for v in row['data'].values())
+                ', '.join(_convert_value(v=v) for v in row['data'].values())
             )
         else:
             sql = 'INSERT INTO `{0}`.`{1}`({2}) VALUES ({3});'.format(
                 row['database'], row['table'],
                 ', '.join(f'`{k}`' for k in row['data'].keys()),
-                ', '.join(kv_pair(v=v) for v in row['data'].values())
+                ', '.join(_convert_value(v=v) for v in row['data'].values())
             )
     elif row['type'] == 'UPDATE':
         row['old'] = json.loads(_base64_decode(row['old']))
         if use_pk and row['key']:
             sql = 'UPDATE `{0}`.`{1}` SET {2} WHERE {3};'.format(
                 row['database'], row['table'],
-                ', '.join(f'{kv_pair(v=row["old"][k], k=k, is_null=False)}' for k in row['old']),
-                ' AND '.join(f'{kv_pair(v=row["data"][k], k=k, is_null=True)}' for k in row['key'])
+                ', '.join(f'{_convert_key_value(k=k, v=row["old"][k], is_null=False)}' for k in row['old']),
+                ' AND '.join(f'{_convert_key_value(k=k, v=row["data"][k], is_null=True)}' for k in row['key'])
             )
         else:
             sql = 'UPDATE `{0}`.`{1}` SET {2} WHERE {3};'.format(
                 row['database'], row['table'],
-                ', '.join(f'{kv_pair(v=v, k=k, is_null=False)}' for k, v in row['old'].items()),
-                ' AND '.join(f'{kv_pair(v=v, k=k, is_null=True)}' for k, v in row['data'].items())
+                ', '.join(f'{_convert_key_value(k=k, v=v, is_null=False)}' for k, v in row['old'].items()),
+                ' AND '.join(f'{_convert_key_value(k=k, v=v, is_null=True)}' for k, v in row['data'].items())
             )
     else:
-        sql = row['data']
+        sql = row['data'] + ';'
     return sql
 
 
 def redo_sql(row, use_pk=False, no_pk=False):
-    if row['data'].startswith('{'):
-        row['data'] = json.loads(row['data'])
+    row['data'] = json.loads(row['data'])
     if row['type'] == 'DELETE':
         if use_pk and row['key']:
             sql = 'DELETE FROM `{0}`.`{1}` WHERE {2};'.format(
                 row['database'], row['table'],
-                ' AND '.join(f'{kv_pair(v=row["data"][k], k=k)}' for k in row['key'])
+                ' AND '.join(f'{_convert_key_value(k=k, v=row["data"][k], is_null=True)}' for k in row['key'])
             )
         else:
             sql = 'DELETE FROM `{0}`.`{1}` WHERE {2};'.format(
                 row['database'], row['table'],
-                ' AND '.join(f'{kv_pair(v=row["data"][k], k=k)}' for k in row['data'])
+                ' AND '.join(f'{_convert_key_value(k=k, v=row["data"][k], is_null=True)}' for k in row['data'])
             )
     elif row['type'] == 'INSERT':
         if no_pk and row['key']:
@@ -208,64 +202,60 @@ def redo_sql(row, use_pk=False, no_pk=False):
             sql = 'INSERT INTO `{0}`.`{1}`({2}) VALUES ({3});'.format(
                 row['database'], row['table'],
                 ', '.join(f'`{k}`' for k in row['data'].keys()),
-                ', '.join(kv_pair(v=v) for v in row['data'].values())
+                ', '.join(_convert_value(v=v) for v in row['data'].values())
             )
         else:
             sql = 'INSERT INTO `{0}`.`{1}`({2}) VALUES ({3});'.format(
                 row['database'], row['table'],
                 ', '.join(f'`{k}`' for k in row['data'].keys()),
-                ', '.join(kv_pair(v=v) for v in row['data'].values())
+                ', '.join(_convert_value(v=v) for v in row['data'].values())
             )
     elif row['type'] == 'UPDATE':
         row['old'] = json.loads(_base64_decode(row['old']))
         if use_pk and row['key']:
             sql = 'UPDATE `{0}`.`{1}` SET {2} WHERE {3};'.format(
                 row['database'], row['table'],
-                ', '.join(f'{kv_pair(v=row["data"][k], k=k, is_null=False)}' for k in row['data']),
-                ' AND '.join(f'{kv_pair(v=row["old"][k], k=k, is_null=True)}' for k in row['key'])
+                ', '.join(_convert_key_value(k=k, v=row["data"][k], is_null=False) for k in row['data']),
+                ' AND '.join(_convert_key_value(k=k, v=row["old"][k], is_null=True) for k in row['key'])
             )
         else:
             sql = 'UPDATE `{0}`.`{1}` SET {2} WHERE {3};'.format(
                 row['database'], row['table'],
-                ', '.join(f'{kv_pair(v, k=k, is_null=False)}' for k, v in row['data'].items()),
-                ' AND '.join(f'{kv_pair(v, k=k, is_null=True)}' for k, v in row['old'].items())
+                ', '.join(_convert_key_value(k=k, v=v, is_null=False) for k, v in row['data'].items()),
+                ' AND '.join(_convert_key_value(k=k, v=v, is_null=True) for k, v in row['old'].items())
             )
     else:
-        sql = row['data']
+        sql = row['data'] + ';'
     return sql
 
 
-def ddl_sql(row, **kwargs):
+def ddl_sql(row, use_pk=False, no_pk=False):
     sql = row['data'] + ';'
     return sql
 
 
-def kv_pair(v, k=None, is_null=True):
-    if k:
-        if v is None:
-            if is_null:
-                return f'`{k}` IS NULL'
-            else:
-                return f'`{k}`=NULL'
-        else:
-            if isinstance(v, (list, dict)):
-                v = f"'{json.dumps(v, ensure_ascii=False)}'"
-            elif isinstance(v, str):
-                v = f"'{v}'"
-            else:
-                v = str(v)
-            return f'`{k}`={v}'
+def _base64_decode(value):
+    return base64.b64decode(value).decode()
+
+
+def _convert_key_value(k, v, is_null=True):
+    converted_v = _convert_value(v)
+    if v is None and is_null:
+        return f'`{k}` IS {converted_v}'
     else:
-        if v is None:
-            return 'NULL'
-        else:
-            if isinstance(v, (list, dict)):
-                v = f"'{json.dumps(v, ensure_ascii=False)}'"
-            elif isinstance(v, str):
-                v = f"'{v}'"
-            else:
-                v = str(v)
-            return v
+        return f'`{k}`={converted_v}'
+
+
+def _convert_value(v):
+    if v is None:
+        v = 'NULL'
+    elif isinstance(v, (list, dict)):
+        v = f"'{json.dumps(v, ensure_ascii=False)}'"
+    elif isinstance(v, str):
+        v = f"'{v}'"
+    else:
+        v = str(v)
+    return v
 
 
 if __name__ == '__main__':

@@ -185,4 +185,9 @@ pos         integer
 [sakila database](https://dev.mysql.com/doc/index-other.html) MySQL示例数据库
 
 ### 3. BUG反馈
-无论是定制版`pymysqlreplication`还是`binlog-repository`项目，欢迎issue
+- 已知bug（无奈...）  
+json，geometry字段类型导致where条件失效；delimiter缺失导致部分ddl执行失败  
+以上，需留意和手动修改
+
+- 反馈bug  
+无论是定制版`pymysqlreplication`还是`binlog-repository`项目，欢迎issues。
