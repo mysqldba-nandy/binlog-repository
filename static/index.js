@@ -3,9 +3,9 @@ $(document).ready(function () {
     init();
 
     function init() {
-        resize();
         $('#timezone').val(new Date().getTimezoneOffset() / -60);
         get_files();
+        resize();
     }
 
     $(window).resize(function () {
@@ -15,25 +15,33 @@ $(document).ready(function () {
     function resize() {
         let height = $(window).height() - parseInt($('#sql').css('padding-top')) * 5;
         $('#sql').height(height);
-        $('#log').height(height - $('form').height())
+        $('#log').height(height - $('form').height());
+        resize_select();
+    }
+
+    function resize_select() {
+        $('select').width($('#timezone').width() - 20);
     }
 
     $('#file').on('change', function () {
         let file = $('#file').val();
-        get_databases(file)
+        get_databases(file);
+        resize_select();
     });
 
     $("#database").on('click', function () {
         if ($(this).val() == null) {
             let file = $('#file').val();
             get_databases(file);
+            resize_select()
         }
     });
 
     $("#database").on('change', function () {
         let file = $('#file').val();
         let database = $('#database').val();
-        get_tables(file, database)
+        get_tables(file, database);
+        resize_select();
     });
 
     $('#table').on('click', function () {
@@ -86,14 +94,14 @@ $(document).ready(function () {
                 return
             }
         }
-        $.popUp('please wait a moment...', 'warning');
-        log('please wait a moment...');
+        $(this).addClass('loading');
         $.ajax({
             url: "/binlogs",
             type: "post",
             data: data,
             dataType: 'json',
             success: function (data) {
+                $("#start").removeClass('loading');
                 let $sql = $('#sql');
                 $sql.val('');
                 log('found {0} rows'.format(data.length));
@@ -104,6 +112,9 @@ $(document).ready(function () {
                 if (sqls) {
                     $sql.val(sqls);
                 }
+            },
+            error: function () {
+                $("#start").removeClass('loading');
             }
         });
     });
@@ -124,6 +135,7 @@ $(document).ready(function () {
             type: "post",
             dataType: 'json',
             success: function (data) {
+                data.sort((a, b) => {return (a < b) - 1});
                 let options = [];
                 for (file of data) {
                     options.push('<option>{0}</option>'.format(file))

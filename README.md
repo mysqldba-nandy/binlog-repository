@@ -1,6 +1,5 @@
-## 仓库
-the binlog-repository of mysql CDC(Change Data Capture)  
-利用[pymysqlreplication](https://github.com/noplay/python-mysql-replication)进行`binlog`实时解析，保存至`InfluxDB`时序数据库，并提供`web`界面生成标准`undo sql, redo sql, ddl sql`  
+## 定位
+利用[pymysqlreplication](https://github.com/noplay/python-mysql-replication)进行`binlog`实时解析，保存至`InfluxDB`时序数据库，并提供`web`界面生成标准`undo sql, redo sql, ddl sql`。  
 
 ## 界面
 - static/example-dml.png
@@ -196,7 +195,7 @@ pos         integer
 
 ### 3. BUG反馈
 - 已知bug（无奈...）  
-json，geometry字段类型导致where条件失效；delimiter缺失导致部分ddl执行失败。以上，需留意并手动修改
+json，geometry字段类型导致where条件失效；delimiter缺失导致部分ddl执行失败。以上，需留意并手动修改。
 
 - 反馈bug  
 无论是定制版`pymysqlreplication`还是`binlog-repository`项目，欢迎issues。
