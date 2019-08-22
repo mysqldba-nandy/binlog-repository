@@ -60,7 +60,7 @@ def tables():
 def binlogs():
     timezone = pytz.FixedOffset(int(request.form.get('timezone')) * 60)
     rows, func, use_pk, no_pk = fetch_all()
-    sqls, regex = [], re.compile(r'\.\d+')
+    result, regex = {'max': config.OUTPUT_ROWS_LIMIT, 'sql': []}, re.compile(r'\.\d+')
     if len(rows):
         rows.index = rows.index.map(timezone.normalize)
         rows['data'] = rows['data'].apply(_base64_decode)
@@ -76,8 +76,8 @@ def binlogs():
             }
             if config.OUTPUT_ROWS_EXTRA:
                 sql = sql + f" # {json.dumps(annotation)}"
-            sqls.append(sql)
-    return jsonify(sqls)
+            result['sql'].append(sql)
+    return jsonify(result)
 
 
 def fetch_all():
@@ -87,6 +87,7 @@ def fetch_all():
     stop_time = request.form.get('stop_time')
     start_position = request.form.get('start_position')
     stop_position = request.form.get('stop_position')
+    page = int(request.form.get('page'))
     extend = ''
     if start_time:
         extend += f' AND time>={int(start_time) * config.NANO}'
@@ -108,7 +109,6 @@ def fetch_all():
             AND "type"='DDL'
             {extend}
             ORDER BY time
-            LIMIT {config.OUTPUT_ROWS_LIMIT}
             """
     else:
         table = request.form.get('table')
@@ -125,8 +125,8 @@ def fetch_all():
             AND ({sql_type})
             {extend}
             ORDER BY time {output_type and 'DESC' or 'ASC'}
-            LIMIT {config.OUTPUT_ROWS_LIMIT}
             """
+    sql += f' LIMIT {config.OUTPUT_ROWS_LIMIT} OFFSET {config.OUTPUT_ROWS_LIMIT * page}'
     rows = influx(sql)
     if output_type is None:
         func = ddl_sql

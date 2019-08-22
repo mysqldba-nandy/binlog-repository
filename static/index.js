@@ -23,6 +23,10 @@ $(document).ready(function () {
         $('select').width($('#timezone').width() - 20);
     }
 
+    $('input,select').on('change', function () {
+        show_badge(false)
+    });
+
     $('#file').on('change', function () {
         let file = $('#file').val();
         get_databases(file);
@@ -41,18 +45,19 @@ $(document).ready(function () {
         let file = $('#file').val();
         let database = $('#database').val();
         get_tables(file, database);
-        resize_select();
     });
 
     $('#table').on('click', function () {
         let database = $('#database').val();
         if (database && $('#table').val() == null) {
             let file = $('#file').val();
-            get_tables(file, database)
+            get_tables(file, database);
+            resize_select();
         }
     });
 
     $("#start").click(function () {
+        let data = {};
         let _data = {
             'file': $('#file').val(),
             'database': $('#database').val(),
@@ -61,12 +66,10 @@ $(document).ready(function () {
             'timezone': $('#timezone').val(),
             'start_position': $('#start-position').val(),
             'stop_position': $('#stop-position').val(),
-            'output_type': $("#output-type input:checked").prop('value')
+            'output_type': $("#output-type input:checked").attr('value'),
+            'page': $(this).attr('data-badge')
         };
-        let data = {}
-        if (_data['output_type'] == 'DDL') {
-            data = _data
-        } else {
+        if (_data['output_type'] != 'DDL') {
             let sql_type = [];
             let $input = $('#sql-type input:checked');
             for (let i = 0; i < $input.length; i++) {
@@ -77,21 +80,21 @@ $(document).ready(function () {
             _data['use_pk'] = $("#pk-type input:first").prop('checked').toString();
             _data['no_pk'] = $("#pk-type input:last").prop('checked').toString();
             _data['undo'] = $("#output-type input:first").prop('checked').toString();
-            for (key in _data) {
-                if (_data[key]) {
-                    if (['start_time', 'stop_time'].indexOf(key) >= 0) {
-                        let unixtime = timestamp(_data[key]);
-                        if (unixtime > 0) {
-                            data[key] = unixtime
-                        }
-                    } else {
-                        data[key] = _data[key]
-                    }
-                }
-            }
             if (data['sql_type'] == '[]') {
                 $.popUp('please choose [INSERT, UPDATE, DELETE]', 'error')
                 return
+            }
+        }
+        for (key in _data) {
+            if (_data[key] != '') {
+                if (['start_time', 'stop_time'].indexOf(key) >= 0) {
+                    let unixtime = timestamp(_data[key]);
+                    if (unixtime > 0) {
+                        data[key] = unixtime
+                    }
+                } else {
+                    data[key] = _data[key]
+                }
             }
         }
         $(this).addClass('loading');
@@ -103,14 +106,24 @@ $(document).ready(function () {
             success: function (data) {
                 $("#start").removeClass('loading');
                 let $sql = $('#sql');
+                let limit = data['max'];
+                let count = data['sql'].length;
                 $sql.val('');
-                log('found {0} rows'.format(data.length));
+                log('limit {0} rows, found {1} rows'.format(limit, count));
                 let sqls = '';
-                for (sql of data) {
+                for (sql of data['sql']) {
                     sqls = sqls + '{0}\n'.format(sql)
                 }
                 if (sqls) {
                     $sql.val(sqls);
+                    if (limit == count) {
+                        let number = show_badge(true);
+                        log('click START for next {0}:{1} rows'.format(number, limit))
+                    } else {
+                        show_badge(false)
+                    }
+                } else {
+                    show_badge(false)
                 }
             },
             error: function () {
@@ -123,7 +136,7 @@ $(document).ready(function () {
         let filename = '{0}-{1}-{2}.sql'.format(
             $('#database').val(),
             $('#table').val(),
-            $("#output-type input:checked").prop('value')
+            $("#output-type input:checked").attr('value')
         );
         let sql = $('#sql').val();
         download(filename, sql);
@@ -239,5 +252,17 @@ $(document).ready(function () {
             hour = '0' + hour
         }
         return hour + time.slice(2, 8)
+    }
+
+    function show_badge(bool) {
+        let number = '0';
+        if (bool) {
+            $start = $('#start');
+            number = (parseInt($start.attr('data-badge')) + 1).toString();
+            $start.addClass('badge').attr('data-badge', number)
+        } else {
+            $('#start').removeClass('badge').attr('data-badge', number)
+        }
+        return number;
     }
 });
