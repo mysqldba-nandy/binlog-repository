@@ -135,7 +135,9 @@ $(document).ready(function () {
             type: "post",
             dataType: 'json',
             success: function (data) {
-                data.sort((a, b) => {return (a < b) - 1});
+                data.sort((a, b) => {
+                    return (a < b) - 1
+                });
                 let options = [];
                 for (file of data) {
                     options.push('<option>{0}</option>'.format(file))
@@ -194,11 +196,6 @@ $(document).ready(function () {
             default:
                 try {
                     unixtime = new Date(time).getTime() / 1000;
-                    let timezone = parseInt($('#timezone').val());
-                    if (!timezone) timezone = 0;
-                    if (timezone) {
-                        unixtime += 3600 * timezone
-                    }
                 } catch (e) {
                     $.popUp('wrong time format!', 'error');
                     unixtime = 0

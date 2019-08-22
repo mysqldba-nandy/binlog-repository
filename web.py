@@ -5,6 +5,7 @@ import base64
 import json
 import warnings
 import pytz
+import re
 
 import config
 
@@ -59,19 +60,18 @@ def tables():
 def binlogs():
     timezone = pytz.FixedOffset(int(request.form.get('timezone')) * 60)
     rows, func, use_pk, no_pk = fetch_all()
-    sqls = []
+    sqls, regex = [], re.compile(r'\.\d+')
     if len(rows):
+        rows.index = rows.index.map(timezone.normalize)
         rows['data'] = rows['data'].apply(_base64_decode)
-        rows['key'] = rows['key'].apply(_base64_decode)
+        rows['key'] = rows['key'].apply(_base64_decode).apply(json.loads)
         for time_index, row in rows.iterrows():
-            time_index = timezone.normalize(time_index)
             row = row.to_dict()
-            row['key'] = json.loads(row['key'])
             sql = func(row, use_pk=use_pk, no_pk=no_pk)
             annotation = {
                 'position': [row['pos'], row['end_log_pos']],
                 'timestamp': time_index.value // config.NANO,
-                'datetime': time_index._short_repr[:19],
+                'datetime': regex.sub('', str(time_index)),
                 'xid': row['xid']
             }
             if config.OUTPUT_ROWS_EXTRA:
@@ -91,7 +91,7 @@ def fetch_all():
     if start_time:
         extend += f' AND time>={int(start_time) * config.NANO}'
     if stop_time:
-        extend += f' AND time<={int(stop_time) * config.NANO}'
+        extend += f' AND time<{(int(stop_time) + 1) * config.NANO}'
     if start_position:
         extend += f' AND "pos">={int(start_position)}'
     if stop_position:
@@ -132,7 +132,8 @@ def fetch_all():
         func = ddl_sql
     elif output_type:
         func = undo_sql
-        rows = rows.sort_index(ascending=False)
+        if len(rows):
+            rows = rows.sort_index(ascending=False)
     else:
         func = redo_sql
     return rows, func, use_pk, no_pk
