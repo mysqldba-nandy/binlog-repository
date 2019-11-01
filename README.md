@@ -45,6 +45,7 @@ output-size = 10000 # output sql limit
 [other]
 log-level = INFO # DEBUG, INFO, WARNING
 ```
+
 ### 3. 运行
 ```bash
 # 请先修改本地project.ini中的参数
@@ -52,12 +53,12 @@ python run.py
 ```
 ```bash
 # 打包镜像
-docker build -t binlog-repository:2019-08-19 .
+docker build -t binlog-repository:2019-08-22 .
 
 # $PWD/project.ini，请先在本地创建project.ini并修改参数，然后挂载
-# 如果想省去docker打包的环节，可使用已有镜像nandy/binlog-repository:2019-08-19
+# 如果想省去docker打包的环节，可使用已有镜像nandy/binlog-repository:2019-08-22
 docker run --name binlog-repository --restart always -d -p3000:3000 \
-    -v $PWD/project.ini:/app/project.ini binlog-repository:2019-08-19
+    -v $PWD/project.ini:/app/project.ini binlog-repository:2019-08-22
 ```
 
 ## 解析
@@ -199,3 +200,8 @@ json，geometry字段类型导致where条件失效；delimiter缺失导致部分
 
 - 反馈bug  
 无论是定制版`pymysqlreplication`还是`binlog-repository`项目，欢迎issues。
+
+### 4. 可能遇到的问题
+- batch-size  
+因为`InfluxDB`有一次连接写入数据库行数限制以及大小限制，所以batch-size要根据实际情况设置。小表可以设置大一些，比如`batch-size=5000`，
+如果遇到程序正常运行一段时间突然报写入错误的问题，有一种可能是某张大表数据变更导致最终写入数据库的流量超过`max-body-size = 25000000`限制。
