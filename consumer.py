@@ -54,11 +54,13 @@ class Consumer:
                     pos = self.rows[-1]['fields']['pos']
                     end_log_pos = self.rows[-1]['fields']['end_log_pos']
                     xid = self.rows[-1]['tags']['xid']
+                    now = int(time.time())
                     checkpoint = [{
                         "measurement": config.INFLUX_TABLE_CHECK,
-                        "time": int(time.time() * config.NANO),
+                        "time": now * config.NANO,
                         "tags": {'table': config.INFLUX_TABLE_POINT},
-                        "fields": {'file': file, 'pos': pos, 'end_log_pos': end_log_pos, 'xid': xid, 'timestamp': self.timestamp}
+                        "fields": {'file': file, 'pos': pos, 'end_log_pos': end_log_pos, 'xid': xid, 'timestamp': self.timestamp,
+                                   'behind': now - self.timestamp}
                     }]
                     self.conn.write_points(checkpoint)
                     logging.log(logging.WARNING, 'timestamp:{} datetime:{} file:{} pos:{} end_log_pos:{} rows:{} remaining_events:{}'.format(
